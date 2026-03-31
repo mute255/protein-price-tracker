@@ -2,6 +2,8 @@ const express = require('express');
 const axios = require('axios');
 const cheerio = require('cheerio');
 const NodeCache = require('node-cache');
+const { TwitterApi } = require('twitter-api-v2');
+const cron = require('node-cron');
 
 const app = express();
 const cache = new NodeCache({ stdTTL: 300 });
@@ -224,6 +226,54 @@ async function fetchAllPrices() {
   console.log(`[完了] 合計${items.length}件`);
   return data;
 }
+
+// ────────────────────────────────────────────────
+// Twitter 自動投稿
+// ────────────────────────────────────────────────
+
+async function postDailyTweet() {
+  const {
+    TWITTER_API_KEY, TWITTER_API_SECRET,
+    TWITTER_ACCESS_TOKEN, TWITTER_ACCESS_SECRET
+  } = process.env;
+
+  if (!TWITTER_API_KEY || !TWITTER_API_SECRET || !TWITTER_ACCESS_TOKEN || !TWITTER_ACCESS_SECRET) {
+    console.log('[Twitter] 環境変数未設定のためスキップ');
+    return;
+  }
+
+  try {
+    const data = await fetchAllPrices();
+    const top3 = data.items.filter(i => i.pricePerKg).slice(0, 3);
+    if (top3.length === 0) { console.log('[Twitter] 投稿データなし'); return; }
+
+    const lines = top3.map((item, i) => {
+      const name = item.name.length > 25 ? item.name.slice(0, 25) + '…' : item.name;
+      return `${i + 1}位 ${name}\n　¥${item.price.toLocaleString('ja-JP')} (¥${item.pricePerKg.toLocaleString('ja-JP')}/kg)`;
+    });
+
+    const siteUrl = process.env.SITE_URL || 'https://protein-price-tracker-c7ft.onrender.com';
+    const tweet = `【今日のプロテイン最安値】\n\n${lines.join('\n\n')}\n\n詳細はこちら→ ${siteUrl}\n#プロテイン #筋トレ #コスパ`;
+
+    const client = new TwitterApi({
+      appKey: TWITTER_API_KEY,
+      appSecret: TWITTER_API_SECRET,
+      accessToken: TWITTER_ACCESS_TOKEN,
+      accessSecret: TWITTER_ACCESS_SECRET,
+    });
+
+    await client.v2.tweet(tweet);
+    console.log('[Twitter] ツイート投稿完了');
+  } catch (err) {
+    console.error('[Twitter] 投稿エラー:', err.message || err);
+  }
+}
+
+// 毎日朝8時（JST）に投稿 = UTC 23時
+cron.schedule('0 23 * * *', () => {
+  console.log('[Twitter] 定期ツイート実行');
+  postDailyTweet();
+});
 
 // ────────────────────────────────────────────────
 // SSR HTML生成
@@ -724,6 +774,16 @@ app.get('/', async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).send(`<h1>エラー</h1><p>${err.message}</p>`);
+  }
+});
+
+// ツイート手動実行（テスト用）
+app.get('/api/tweet-now', async (req, res) => {
+  try {
+    await postDailyTweet();
+    res.json({ ok: true, message: 'ツイート投稿完了' });
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message });
   }
 });
 
