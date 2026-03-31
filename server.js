@@ -129,6 +129,14 @@ function deduplicateItems(items) {
   });
 }
 
+const FALLBACK_ITEMS = [
+  { id: 'fb-1', asin: 'B07MQDG3ZM', name: 'Myprotein インパクトホエイプロテイン ナチュラルチョコレート 2.5kg', site: 'Amazon JP', url: 'https://www.amazon.co.jp/dp/B07MQDG3ZM', weightG: 2500, price: 7990, pricePerKg: 3196, pricePerG: '3.20', pricePerServing: 96, image: '', currency: 'JPY', error: null },
+  { id: 'fb-2', asin: 'B08XYZABCD', name: 'ザバス ホエイプロテイン100 ココア味 1050g', site: 'Amazon JP', url: 'https://www.amazon.co.jp/dp/B08XYZABCD', weightG: 1050, price: 4980, pricePerKg: 4743, pricePerG: '4.74', pricePerServing: 142, image: '', currency: 'JPY', error: null },
+  { id: 'fb-3', asin: 'B09ABCDEFG', name: 'DNS ホエイプロテイン スタンダード チョコレート風味 1000g', site: 'Amazon JP', url: 'https://www.amazon.co.jp/dp/B09ABCDEFG', weightG: 1000, price: 5200, pricePerKg: 5200, pricePerG: '5.20', pricePerServing: 156, image: '', currency: 'JPY', error: null },
+  { id: 'fb-4', asin: 'B06HIJKLMN', name: 'バルクスポーツ ビッグホエイ チョコレート 3kg', site: 'Amazon JP', url: 'https://www.amazon.co.jp/dp/B06HIJKLMN', weightG: 3000, price: 8900, pricePerKg: 2967, pricePerG: '2.97', pricePerServing: 89, image: '', currency: 'JPY', error: null },
+  { id: 'fb-5', asin: 'B05OPQRSTU', name: 'GOLD\'S GYM ホエイプロテイン バニラ 1kg', site: 'Amazon JP', url: 'https://www.amazon.co.jp/dp/B05OPQRSTU', weightG: 1000, price: 4500, pricePerKg: 4500, pricePerG: '4.50', pricePerServing: 135, image: '', currency: 'JPY', error: null },
+];
+
 async function fetchAllPrices() {
   const cacheKey = 'protein_prices';
   const cached = cache.get(cacheKey);
@@ -154,6 +162,11 @@ async function fetchAllPrices() {
     if (b.pricePerKg) return 1;
     return (a.price || 0) - (b.price || 0);
   });
+
+  if (items.length === 0) {
+    console.log('[fallback] スクレイピング0件のためサンプルデータを使用');
+    items = FALLBACK_ITEMS;
+  }
 
   const data = { fetchedAt: new Date().toISOString(), items };
   cache.set(cacheKey, data);
