@@ -369,7 +369,7 @@ function renderHTML(data) {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>プロテイン最安値ランキング【${new Date().getFullYear()}年最新】kg単価で徹底比較 | 毎日更新</title>
+  <title>【毎日更新】プロテイン最安値ランキング｜コスパで徹底比較【${new Date().getFullYear()}年最新】</title>
   <meta name="description" content="プロテインの最安値をkg単価・1食単価でリアルタイム比較。Amazonの${successCount}商品を毎日自動更新。現在の最安値は${cheapestPpkg}/kg（${updatedStr}時点）。ホエイプロテインのコスパ最強商品がすぐわかる。">
   <meta name="keywords" content="プロテイン 最安値, ホエイプロテイン コスパ, プロテイン 価格比較, プロテイン kg単価, プロテイン 安い">
   <link rel="canonical" href="https://protein-safetynet.com/">
