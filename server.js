@@ -788,6 +788,24 @@ app.get('/api/tweet-now', async (req, res) => {
   }
 });
 
+// ツイート用テキスト生成
+app.get('/api/tweet-text', async (req, res) => {
+  try {
+    const data = await fetchAllPrices();
+    const top3 = data.items.filter(i => i.pricePerKg).slice(0, 3);
+    const siteUrl = process.env.SITE_URL || 'https://protein-price-tracker-c7ft.onrender.com';
+    const lines = top3.map((item, i) => {
+      const name = item.name.length > 25 ? item.name.slice(0, 25) + '…' : item.name;
+      return `${i + 1}位 ${name}\n　¥${item.price.toLocaleString('ja-JP')} (¥${item.pricePerKg.toLocaleString('ja-JP')}/kg)`;
+    });
+    const tweet = `【今日のプロテイン最安値】\n\n${lines.join('\n\n')}\n\n詳細はこちら→ ${siteUrl}\n#プロテイン #筋トレ #コスパ`;
+    res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+    res.send(tweet);
+  } catch (err) {
+    res.status(500).send('エラー: ' + err.message);
+  }
+});
+
 // JSON API（フロントエンド用・必要に応じて）
 app.get('/api/prices', async (req, res) => {
   try {
