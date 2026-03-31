@@ -163,12 +163,13 @@ async function fetchAllPrices() {
     return (a.price || 0) - (b.price || 0);
   });
 
-  if (items.length === 0) {
+  const isFallback = items.length === 0;
+  if (isFallback) {
     console.log('[fallback] スクレイピング0件のためサンプルデータを使用');
     items = FALLBACK_ITEMS;
   }
 
-  const data = { fetchedAt: new Date().toISOString(), items };
+  const data = { fetchedAt: new Date().toISOString(), items, isFallback };
   cache.set(cacheKey, data);
   console.log(`[完了] 合計${items.length}件`);
   return data;
@@ -303,7 +304,7 @@ function renderTableRows(items) {
 }
 
 function renderHTML(data) {
-  const { items, fetchedAt } = data;
+  const { items, fetchedAt, isFallback } = data;
   const updatedAt = new Date(fetchedAt);
   const updatedStr = updatedAt.toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' });
   const successCount = items.filter(i => i.price != null).length;
@@ -502,6 +503,7 @@ function renderHTML(data) {
   </div>` : ''}
 
   <!-- 価格比較テーブル -->
+  ${isFallback ? '<p style="text-align:center;padding:10px 16px;background:#fff8e1;border-radius:8px;font-size:.85rem;color:#7a6000;margin-bottom:16px">⚠️ 現在サンプル価格を表示しています。価格は参考値です。最新価格は各商品リンクよりAmazonでご確認ください。</p>' : ''}
   <div class="table-wrap" role="region" aria-label="プロテイン価格比較テーブル">
     <div class="table-scroll">
     <table id="price-table">
