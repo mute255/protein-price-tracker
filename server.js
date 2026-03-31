@@ -184,8 +184,9 @@ async function fetchAllPrices() {
   ]);
 
   let items = [];
-  for (const r of [r1, r2, r3, r4, r5]) {
+  for (const [i, r] of [r1, r2, r3, r4, r5].entries()) {
     if (r.status === 'fulfilled') items = items.concat(r.value);
+    else console.error(`[fetch] r${i+1} エラー:`, r.reason?.message || r.reason);
   }
 
   items = deduplicateItems(items);
