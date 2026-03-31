@@ -32,11 +32,18 @@ function estimateProteinPerServing(name) {
   return 20; // デフォルト20g
 }
 
+function buildAmazonUrl(targetUrl) {
+  const key = process.env.SCRAPER_API_KEY;
+  if (key) return `http://api.scraperapi.com?api_key=${key}&url=${encodeURIComponent(targetUrl)}&country_code=jp`;
+  return targetUrl;
+}
+
 async function scrapeAmazonSearch(keyword) {
-  const url = `https://www.amazon.co.jp/s?k=${encodeURIComponent(keyword)}&i=hpc`;
+  const targetUrl = `https://www.amazon.co.jp/s?k=${encodeURIComponent(keyword)}&i=hpc`;
+  const url = buildAmazonUrl(targetUrl);
   const res = await axios.get(url, {
     headers: { ...HEADERS, 'Referer': 'https://www.amazon.co.jp/' },
-    timeout: 15000
+    timeout: 30000
   });
   const html = res.data;
   const items = [];
@@ -82,10 +89,11 @@ async function scrapeAmazonSearch(keyword) {
 }
 
 async function scrapeAmazonPage2(keyword) {
-  const url = `https://www.amazon.co.jp/s?k=${encodeURIComponent(keyword)}&i=hpc&page=2`;
+  const targetUrl = `https://www.amazon.co.jp/s?k=${encodeURIComponent(keyword)}&i=hpc&page=2`;
+  const url = buildAmazonUrl(targetUrl);
   const res = await axios.get(url, {
     headers: { ...HEADERS, 'Referer': 'https://www.amazon.co.jp/' },
-    timeout: 15000
+    timeout: 30000
   });
   const html = res.data;
   const items = [];
