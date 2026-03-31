@@ -360,11 +360,11 @@ function renderHTML(data) {
 
     /* テーブル */
     main { max-width: 1200px; margin: 0 auto; padding: 20px 16px 60px; }
-    .table-wrap { overflow-x: auto; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 48px; background: #fff; box-shadow: 0 1px 4px rgba(0,0,0,.06); }
+    .table-wrap { border-radius: 12px; border: 1px solid var(--border); margin-bottom: 48px; background: #fff; box-shadow: 0 1px 4px rgba(0,0,0,.06); overflow: hidden; }
+    .table-scroll { overflow-x: auto; }
     table { width: 100%; border-collapse: collapse; font-size: 0.83rem; }
-    thead { position: sticky; top: 57px; z-index: 10; }
-    thead tr { background: #f8fafc; }
-    th { padding: 10px 14px; text-align: left; color: var(--muted); font-weight: 700; font-size: 0.72rem; text-transform: uppercase; letter-spacing: .04em; border-bottom: 1px solid var(--border); white-space: nowrap; cursor: pointer; user-select: none; }
+    thead tr { background: #e8ecf2; }
+    th { padding: 12px 14px; text-align: left; color: #374151; font-weight: 700; font-size: 0.78rem; letter-spacing: .03em; border-bottom: 3px solid #b0bac8; white-space: nowrap; cursor: pointer; user-select: none; }
     th:hover { color: var(--accent); }
     th .arr { margin-left: 3px; opacity: .3; font-size: 0.65rem; }
     th.asc .arr::after  { content: '▲'; opacity: 1; color: var(--accent); }
@@ -490,6 +490,7 @@ function renderHTML(data) {
 
   <!-- 価格比較テーブル -->
   <div class="table-wrap" role="region" aria-label="プロテイン価格比較テーブル">
+    <div class="table-scroll">
     <table id="price-table">
       <thead>
         <tr>
@@ -504,6 +505,7 @@ function renderHTML(data) {
         ${tableRows}
       </tbody>
     </table>
+    </div>
   </div>
 
   <!-- コンテンツ（SEO用） -->

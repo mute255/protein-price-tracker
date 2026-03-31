@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>プロテイン最安値チェッカー</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', 'Hiragino Sans', 'Yu Gothic', sans-serif;
+      background: #0f0f1a;
+      color: #e8e8f0;
+      min-height: 100vh;
+    }
+
+    header {
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      border-bottom: 1px solid #2a2a4a;
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .header-left h1 {
+      font-size: 1.3rem;
+      font-weight: 700;
+      background: linear-gradient(90deg, #6ee7f7, #a78bfa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .header-left .subtitle {
+      font-size: 0.75rem;
+      color: #6b7280;
+      margin-top: 2px;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    #last-updated {
+      font-size: 0.72rem;
+      color: #6b7280;
+    }
+
+    button {
+      cursor: pointer;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      padding: 7px 14px;
+      transition: all 0.2s;
+    }
+
+    #refresh-btn {
+      background: linear-gradient(135deg, #6ee7f7, #a78bfa);
+      color: #0f0f1a;
+    }
+    #refresh-btn:hover { opacity: 0.85; transform: translateY(-1px); }
+    #refresh-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+    .controls {
+      padding: 12px 24px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+      background: #12121f;
+      border-bottom: 1px solid #1e1e35;
+    }
+
+    .ctrl-label { font-size: 0.75rem; color: #6b7280; white-space: nowrap; }
+
+    .sort-btn, .filter-btn {
+      background: #1e1e35;
+      color: #a0aec0;
+      padding: 5px 12px;
+      font-size: 0.78rem;
+      border-radius: 6px;
+    }
+    .sort-btn.active { background: #2d2b55; color: #a78bfa; box-shadow: 0 0 0 1px #a78bfa55; }
+    .filter-btn.active { background: #1a2e35; color: #6ee7f7; box-shadow: 0 0 0 1px #6ee7f755; }
+
+    .search-wrap {
+      margin-left: auto;
+    }
+
+    #search-input {
+      background: #1e1e35;
+      border: 1px solid #2a2a4a;
+      border-radius: 8px;
+      color: #e8e8f0;
+      padding: 6px 12px;
+      font-size: 0.82rem;
+      width: 200px;
+      outline: none;
+    }
+    #search-input:focus { border-color: #a78bfa; }
+
+    .status-bar {
+      padding: 8px 24px;
+      font-size: 0.76rem;
+      color: #6b7280;
+      background: #0f0f1a;
+      border-bottom: 1px solid #1a1a2e;
+    }
+    .status-bar.loading { color: #a78bfa; }
+    .status-bar.error { color: #f87171; }
+
+    main { padding: 16px 24px; max-width: 1400px; margin: 0 auto; }
+
+    /* 最安値バナー */
+    #best-deal {
+      background: linear-gradient(135deg, #0d2015, #0d1a2e);
+      border: 1px solid #22543d;
+      border-radius: 12px;
+      padding: 14px 20px;
+      margin-bottom: 16px;
+      display: none;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .badge-best { background: linear-gradient(135deg, #38a169, #276749); color: white; font-size: 0.68rem; font-weight: 700; padding: 3px 10px; border-radius: 20px; white-space: nowrap; }
+    #best-deal .deal-info { flex: 1; min-width: 0; }
+    #best-deal .deal-name { font-weight: 600; font-size: 0.9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    #best-deal .deal-price { color: #68d391; font-size: 1.15rem; font-weight: 700; }
+    #best-deal .deal-per-kg { color: #68d391; font-size: 0.78rem; }
+    #best-deal a button { background: linear-gradient(135deg, #38a169, #276749); color: white; font-size: 0.78rem; padding: 7px 14px; }
+
+    /* テーブルビュー */
+    #table-wrap {
+      overflow-x: auto;
+      border-radius: 12px;
+      border: 1px solid #2a2a4a;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.83rem;
+    }
+
+    thead { position: sticky; top: 0; z-index: 10; }
+    thead tr { background: #1a1a30; }
+
+    th {
+      padding: 10px 14px;
+      text-align: left;
+      color: #6b7280;
+      font-weight: 600;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      border-bottom: 1px solid #2a2a4a;
+      white-space: nowrap;
+    }
+
+    th.sortable { cursor: pointer; user-select: none; }
+    th.sortable:hover { color: #a78bfa; }
+    th .sort-arrow { margin-left: 4px; opacity: 0.4; }
+    th.sort-asc .sort-arrow::after { content: '▲'; opacity: 1; color: #a78bfa; }
+    th.sort-desc .sort-arrow::after { content: '▼'; opacity: 1; color: #a78bfa; }
+
+    tbody tr {
+      border-bottom: 1px solid #1e1e35;
+      transition: background 0.15s;
+    }
+    tbody tr:hover { background: #1a1a2e; }
+    tbody tr.rank-1 { background: linear-gradient(90deg, #0d2015 0%, transparent 40%); }
+    tbody tr.rank-2 { background: linear-gradient(90deg, #1a1a09 0%, transparent 40%); }
+    tbody tr.rank-3 { background: linear-gradient(90deg, #1a1015 0%, transparent 40%); }
+
+    td { padding: 10px 14px; vertical-align: middle; }
+
+    .rank-cell { width: 40px; text-align: center; }
+    .rank-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 24px; height: 24px;
+      border-radius: 50%;
+      font-weight: 700;
+      font-size: 0.72rem;
+    }
+    .rank-badge.r1 { background: #38a169; color: white; }
+    .rank-badge.r2 { background: #c6a027; color: white; }
+    .rank-badge.r3 { background: #8a7a7a; color: white; }
+    .rank-num { color: #3a3a5a; font-size: 0.75rem; }
+
+    .product-cell { display: flex; align-items: center; gap: 10px; }
+    .product-img {
+      width: 52px; height: 52px;
+      object-fit: contain;
+      border-radius: 6px;
+      background: #1e1e35;
+      flex-shrink: 0;
+    }
+    .product-img-ph {
+      width: 52px; height: 52px;
+      border-radius: 6px;
+      background: #1e1e35;
+      display: flex; align-items: center; justify-content: center;
+      color: #3a3a5a; font-size: 1.4rem;
+      flex-shrink: 0;
+    }
+    .product-name {
+      font-weight: 500;
+      line-height: 1.4;
+      color: #e8e8f0;
+      max-width: 420px;
+    }
+    .product-name a { color: inherit; text-decoration: none; }
+    .product-name a:hover { color: #a78bfa; text-decoration: underline; }
+
+    .site-badge {
+      display: inline-block;
+      font-size: 0.65rem;
+      padding: 2px 7px;
+      border-radius: 4px;
+      white-space: nowrap;
+    }
+    .site-badge.amazon { background: #2d1a0a; color: #f6ad55; border: 1px solid #7b4f1a; }
+    .site-badge.iherb  { background: #0f2d1a; color: #68d391; border: 1px solid #276749; }
+
+    .price-main { font-size: 1.05rem; font-weight: 700; color: #e8e8f0; white-space: nowrap; }
+    .price-na { color: #3a3a5a; font-size: 0.8rem; }
+    .per-kg { font-size: 0.78rem; color: #a78bfa; white-space: nowrap; }
+    .per-kg.best { color: #68d391; font-weight: 700; }
+    .weight-info { font-size: 0.72rem; color: #4a4a6a; }
+
+    .no-result {
+      text-align: center;
+      padding: 60px 20px;
+      color: #4a4a6a;
+    }
+    .no-result .icon { font-size: 2.5rem; margin-bottom: 10px; }
+
+    /* スケルトン */
+    .skeleton-row { animation: pulse 1.4s ease-in-out infinite; }
+    .skeleton-cell { height: 18px; background: #1e1e35; border-radius: 4px; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+    .spinner {
+      display: inline-block;
+      width: 12px; height: 12px;
+      border: 2px solid #a78bfa44;
+      border-top-color: #a78bfa;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      vertical-align: middle;
+      margin-right: 5px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <h1>プロテイン最安値チェッカー</h1>
+    <div class="subtitle">Amazonからリアルタイム価格取得 · 再読み込みで最新表示</div>
+  </div>
+  <div class="header-right">
+    <span id="last-updated"></span>
+    <button id="refresh-btn" onclick="loadPrices(true)">最新に更新</button>
+  </div>
+</header>
+
+<div class="controls">
+  <span class="ctrl-label">並び替え：</span>
+  <button class="sort-btn active" onclick="setSort('pricePerKg',this)">単価安い順(kg)</button>
+  <button class="sort-btn" onclick="setSort('price',this)">価格安い順</button>
+  <button class="sort-btn" onclick="setSort('weightG',this)">容量大きい順</button>
+  <span class="ctrl-label" style="margin-left:8px">フィルター：</span>
+  <button class="filter-btn active" onclick="setFilter('all',this)">すべて</button>
+  <button class="filter-btn" onclick="setFilter('Amazon JP',this)">Amazon JP</button>
+  <button class="filter-btn" onclick="setFilter('iHerb',this)">iHerb</button>
+  <div class="search-wrap">
+    <input id="search-input" type="text" placeholder="商品名で絞り込み..." oninput="renderTable()">
+  </div>
+</div>
+
+<div class="status-bar" id="status">読み込み中...</div>
+
+<main>
+  <div id="best-deal">
+    <span class="badge-best">最安値/kg</span>
+    <div class="deal-info">
+      <div class="deal-name" id="deal-name"></div>
+      <div>
+        <span class="deal-price" id="deal-price"></span>
+        <span class="deal-per-kg" id="deal-per-kg"></span>
+      </div>
+    </div>
+    <a id="deal-link" href="#" target="_blank" rel="noopener">
+      <button>購入ページへ →</button>
+    </a>
+  </div>
+
+  <div id="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th class="rank-cell">#</th>
+          <th style="min-width:300px">商品名</th>
+          <th>販売サイト</th>
+          <th class="sortable" id="th-price" onclick="setSort('price',null,this)">価格<span class="sort-arrow"></span></th>
+          <th class="sortable sort-asc" id="th-ppkg" onclick="setSort('pricePerKg',null,this)">単価(円/kg)<span class="sort-arrow"></span></th>
+          <th class="sortable" id="th-weight" onclick="setSort('weightG',null,this)">容量<span class="sort-arrow"></span></th>
+        </tr>
+      </thead>
+      <tbody id="tbody">
+        <tr class="skeleton-row"><td colspan="6" style="padding:20px"><div class="skeleton-cell" style="width:80%"></div></td></tr>
+        <tr class="skeleton-row"><td colspan="6" style="padding:20px"><div class="skeleton-cell" style="width:65%"></div></td></tr>
+        <tr class="skeleton-row"><td colspan="6" style="padding:20px"><div class="skeleton-cell" style="width:72%"></div></td></tr>
+      </tbody>
+    </table>
+  </div>
+</main>
+
+<script>
+  let allItems = [];
+  let currentSort = 'pricePerKg';
+  let currentSortDir = 'asc';
+  let currentFilter = 'all';
+
+  const thMap = {
+    price: document.getElementById('th-price'),
+    pricePerKg: document.getElementById('th-ppkg'),
+    weightG: document.getElementById('th-weight'),
+  };
+
+  function setSort(sort, btn, th) {
+    if (btn) {
+      document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    }
+    if (currentSort === sort) {
+      currentSortDir = currentSortDir === 'asc' ? 'desc' : 'asc';
+    } else {
+      currentSort = sort;
+      currentSortDir = sort === 'weightG' ? 'desc' : 'asc';
+    }
+    // ヘッダーアイコン更新
+    Object.values(thMap).forEach(t => { if(t) t.className = 'sortable'; });
+    const target = thMap[sort];
+    if (target) target.className = `sortable sort-${currentSortDir}`;
+
+    renderTable();
+  }
+
+  function setFilter(filter, btn) {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentFilter = filter;
+    renderTable();
+  }
+
+  function fmtPrice(p) {
+    return p != null ? '¥' + Math.round(p).toLocaleString('ja-JP') : null;
+  }
+
+  function getSiteClass(site) {
+    if (site === 'Amazon JP') return 'amazon';
+    if (site === 'iHerb') return 'iherb';
+    return '';
+  }
+
+  function renderTable() {
+    const tbody = document.getElementById('tbody');
+    const query = document.getElementById('search-input').value.toLowerCase();
+
+    let filtered = allItems.filter(item => {
+      if (currentFilter !== 'all' && item.site !== currentFilter) return false;
+      if (query && !item.name.toLowerCase().includes(query)) return false;
+      return true;
+    });
+
+    filtered = [...filtered].sort((a, b) => {
+      const dir = currentSortDir === 'asc' ? 1 : -1;
+      const va = a[currentSort];
+      const vb = b[currentSort];
+      if (va == null && vb == null) return 0;
+      if (va == null) return 1;
+      if (vb == null) return -1;
+      return (va - vb) * dir;
+    });
+
+    // 最安値バナー
+    const cheapest = filtered.find(i => i.pricePerKg);
+    const bestDeal = document.getElementById('best-deal');
+    if (cheapest) {
+      bestDeal.style.display = 'flex';
+      document.getElementById('deal-name').textContent = cheapest.name;
+      document.getElementById('deal-price').textContent = fmtPrice(cheapest.price);
+      document.getElementById('deal-per-kg').textContent = ` (${fmtPrice(cheapest.pricePerKg)}/kg)`;
+      document.getElementById('deal-link').href = cheapest.url;
+    } else {
+      bestDeal.style.display = 'none';
+    }
+
+    if (filtered.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="6"><div class="no-result"><div class="icon">🔍</div>条件に一致する商品がありません</div></td></tr>`;
+      return;
+    }
+
+    // kg単価ランキング
+    const ranked = [...filtered].filter(i => i.pricePerKg).sort((a,b) => a.pricePerKg - b.pricePerKg);
+    const rankMap = new Map(ranked.slice(0,3).map((item, i) => [item.id, i+1]));
+
+    tbody.innerHTML = filtered.map((item, idx) => {
+      const rank = rankMap.get(item.id);
+      const rankCell = rank
+        ? `<span class="rank-badge r${rank}">${rank}</span>`
+        : `<span class="rank-num">${idx + 1}</span>`;
+      const rowClass = rank ? `rank-${rank}` : '';
+
+      const imgHtml = item.image
+        ? `<img class="product-img" src="${escHtml(item.image)}" alt="" loading="lazy" onerror="this.parentNode.innerHTML='<div class=product-img-ph>🥛</div>'">`
+        : `<div class="product-img-ph">🥛</div>`;
+
+      const priceHtml = item.price != null
+        ? `<span class="price-main">${fmtPrice(item.price)}</span>`
+        : `<span class="price-na">取得不可</span>`;
+
+      const ppkgHtml = item.pricePerKg != null
+        ? `<span class="per-kg${rank === 1 ? ' best' : ''}">${fmtPrice(item.pricePerKg)}<small>/kg</small></span>`
+        : `<span class="price-na">-</span>`;
+
+      const weightHtml = item.weightG
+        ? `<span class="weight-info">${(item.weightG/1000).toFixed(item.weightG % 1000 === 0 ? 0 : 2).replace(/\.?0+$/,'')}kg</span>`
+        : `<span class="price-na">不明</span>`;
+
+      return `
+        <tr class="${rowClass}">
+          <td class="rank-cell">${rankCell}</td>
+          <td>
+            <div class="product-cell">
+              ${imgHtml}
+              <div class="product-name">
+                <a href="${escHtml(item.url)}" target="_blank" rel="noopener">${escHtml(item.name)}</a>
+              </div>
+            </div>
+          </td>
+          <td><span class="site-badge ${getSiteClass(item.site)}">${escHtml(item.site)}</span></td>
+          <td>${priceHtml}</td>
+          <td>${ppkgHtml}</td>
+          <td>${weightHtml}</td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  function escHtml(str) {
+    if (!str) return '';
+    return String(str)
+      .replace(/&amp;/g, '&')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  async function loadPrices(forceRefresh = false) {
+    const statusEl = document.getElementById('status');
+    statusEl.className = 'status-bar loading';
+    statusEl.innerHTML = '<span class="spinner"></span>最新価格を取得中... (初回は10〜20秒かかります)';
+    document.getElementById('refresh-btn').disabled = true;
+
+    try {
+      const url = forceRefresh ? '/api/prices?refresh=1' : '/api/prices';
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+
+      allItems = data.items || [];
+
+      const fetchedAt = new Date(data.fetchedAt);
+      const diff = Math.round((Date.now() - fetchedAt.getTime()) / 1000);
+      const diffStr = diff < 60 ? `${diff}秒前` : `${Math.round(diff/60)}分前`;
+      document.getElementById('last-updated').textContent = `取得: ${diffStr}`;
+
+      const successCount = allItems.filter(i => i.price != null).length;
+      statusEl.className = 'status-bar';
+      statusEl.textContent = `${allItems.length}件中 ${successCount}件の価格を取得 · ${fetchedAt.toLocaleTimeString('ja-JP')} 時点 · 5分ごとに自動キャッシュ更新`;
+
+      renderTable();
+    } catch (err) {
+      statusEl.className = 'status-bar error';
+      statusEl.textContent = `エラー: ${err.message}`;
+    } finally {
+      document.getElementById('refresh-btn').disabled = false;
+    }
+  }
+
+  loadPrices();
+</script>
+</body>
+</html>
