@@ -135,11 +135,18 @@ function deduplicateItems(items) {
 
 async function fetchRakutenItems(keyword) {
   const appId = process.env.RAKUTEN_APP_ID;
+  const accessKey = process.env.RAKUTEN_ACCESS_KEY;
   const affiliateId = process.env.RAKUTEN_AFFILIATE_ID;
   if (!appId) { console.log('[楽天] RAKUTEN_APP_ID未設定'); return []; }
 
-  const res = await axios.get('https://app.rakuten.co.jp/services/api/IchibaItem/Search/20170706', {
-    params: { applicationId: appId, affiliateId, keyword, hits: 30, sort: '+itemPrice', format: 'json' },
+  const siteUrl = process.env.SITE_URL || 'https://protein-price-tracker-c7ft.onrender.com';
+  const res = await axios.get('https://openapi.rakuten.co.jp/ichibams/api/IchibaItem/Search/20220601', {
+    headers: {
+      'Referer': siteUrl + '/',
+      'Origin': siteUrl,
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0'
+    },
+    params: { applicationId: appId, accessKey, affiliateId, keyword, hits: 30, sort: '+itemPrice', format: 'json', formatVersion: 2 },
     timeout: 15000
   });
 
