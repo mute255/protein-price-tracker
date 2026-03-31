@@ -266,6 +266,7 @@ async function postDailyTweet() {
     console.log('[Twitter] ツイート投稿完了');
   } catch (err) {
     console.error('[Twitter] 投稿エラー:', err.message || err);
+    throw err;
   }
 }
 
