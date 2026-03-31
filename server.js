@@ -379,6 +379,7 @@ function renderHTML(data) {
   <meta property="og:description" content="kg単価で比較するプロテイン最安値ランキング。${successCount}商品をリアルタイム更新。">
   <meta property="og:type" content="website">
   <meta property="og:locale" content="ja_JP">
+  <meta name="google-site-verification" content="WfJnMrSxS0W2j_AdmEntnR4I6ZuUzOM5d0-enU1ehoE" />
   <meta name="twitter:card" content="summary_large_image">
 
   <!-- 構造化データ -->
