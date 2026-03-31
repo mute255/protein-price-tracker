@@ -129,6 +129,37 @@ function deduplicateItems(items) {
   });
 }
 
+// ────────────────────────────────────────────────
+// 楽天市場API
+// ────────────────────────────────────────────────
+
+async function fetchRakutenItems(keyword) {
+  const appId = process.env.RAKUTEN_APP_ID;
+  const affiliateId = process.env.RAKUTEN_AFFILIATE_ID;
+  if (!appId) { console.log('[楽天] RAKUTEN_APP_ID未設定'); return []; }
+
+  const res = await axios.get('https://app.rakuten.co.jp/services/api/IchibaItem/Search/20170706', {
+    params: { applicationId: appId, affiliateId, keyword, hits: 30, sort: '+itemPrice', format: 'json' },
+    timeout: 15000
+  });
+
+  const items = [];
+  for (const { Item } of res.data.Items) {
+    const name = Item.itemName;
+    const price = Item.itemPrice;
+    const url = Item.affiliateUrl || Item.itemUrl;
+    const image = Item.mediumImageUrls?.[0]?.imageUrl || '';
+    const weightG = parseWeightFromName(name);
+    const pricePerKg = weightG ? Math.round((price / weightG) * 1000) : null;
+    const pricePerG = weightG ? (price / weightG).toFixed(2) : null;
+    const pricePerServing = weightG ? Math.round(price / (weightG / 30)) : null;
+    items.push({ id: `rakuten-${Item.itemCode}`, name, site: '楽天市場', url,
+      weightG, price, pricePerKg, pricePerG, pricePerServing, image, currency: 'JPY', error: null });
+  }
+  console.log(`[楽天] "${keyword}" → ${items.length}件`);
+  return items;
+}
+
 const FALLBACK_ITEMS = [
   { id: 'fb-1', asin: 'B07MQDG3ZM', name: 'マイプロテイン ホエイプロテイン ナチュラルチョコレート 2.5kg', site: 'Amazon JP', url: 'https://www.amazon.co.jp/dp/B07MQDG3ZM', weightG: 2500, price: 7990, pricePerKg: 3196, pricePerG: '3.20', pricePerServing: 96, image: '', currency: 'JPY', error: null },
   { id: 'fb-2', asin: 'B001UE0PZC', name: 'ザバス ホエイプロテイン100 ココア味 1050g', site: 'Amazon JP', url: 'https://www.amazon.co.jp/dp/B001UE0PZC', weightG: 1050, price: 4980, pricePerKg: 4743, pricePerG: '4.74', pricePerServing: 142, image: '', currency: 'JPY', error: null },
@@ -144,14 +175,16 @@ async function fetchAllPrices() {
 
   console.log('[fetch] 価格取得開始...');
 
-  const [r1, r2, r3] = await Promise.allSettled([
+  const [r1, r2, r3, r4, r5] = await Promise.allSettled([
     scrapeAmazonSearch('ホエイプロテイン'),
     scrapeAmazonSearch('ホエイプロテイン 2kg 3kg'),
     scrapeAmazonPage2('ホエイプロテイン'),
+    fetchRakutenItems('ホエイプロテイン'),
+    fetchRakutenItems('ホエイプロテイン 大容量'),
   ]);
 
   let items = [];
-  for (const r of [r1, r2, r3]) {
+  for (const r of [r1, r2, r3, r4, r5]) {
     if (r.status === 'fulfilled') items = items.concat(r.value);
   }
 
