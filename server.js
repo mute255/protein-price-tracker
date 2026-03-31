@@ -162,7 +162,8 @@ async function fetchRakutenItems(keyword) {
   for (const Item of res.data.Items) {
     const name = Item.itemName;
     const price = Item.itemPrice;
-    const url = Item.affiliateUrl || Item.itemUrl;
+    const url = Item.affiliateUrl ||
+      (affiliateId ? `https://hb.afl.rakuten.co.jp/ichiba/${affiliateId}/?pc=${encodeURIComponent(Item.itemUrl)}` : Item.itemUrl);
     const image = Item.mediumImageUrls?.[0] || '';
     const weightG = parseWeightFromName(name);
     const pricePerKg = weightG ? Math.round((price / weightG) * 1000) : null;
