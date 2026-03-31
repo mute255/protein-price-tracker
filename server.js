@@ -327,6 +327,7 @@ function renderTableRows(items) {
             ${imgHtml}
             <div class="product-info">
               <a href="${escHtml(item.url)}" target="_blank" rel="noopener sponsored" class="product-link">${escHtml(item.name)}</a>
+              <span class="site-badge ${item.site === '楽天市場' ? 'site-rakuten' : 'site-amazon'}">${escHtml(item.site)}</span>
               ${item.weightG ? `<span class="weight-tag">${item.weightG >= 1000 ? (item.weightG/1000).toFixed(item.weightG % 1000 === 0 ? 0 : 1) + 'kg' : item.weightG + 'g'}</span>` : ''}
             </div>
           </div>
@@ -446,6 +447,9 @@ function renderHTML(data) {
     .product-link { color: var(--text); text-decoration: none; font-weight: 500; line-height: 1.4; display: block; }
     .product-link:hover { color: var(--accent); text-decoration: underline; }
     .weight-tag { display: inline-block; background: #eef1f6; color: var(--muted); font-size: .65rem; padding: 1px 6px; border-radius: 4px; margin-top: 3px; }
+    .site-badge { display: inline-block; font-size: .62rem; padding: 1px 6px; border-radius: 4px; margin-top: 3px; font-weight: 600; }
+    .site-amazon { background: #fff3cd; color: #856404; }
+    .site-rakuten { background: #fde8e8; color: #a01515; }
 
     .td-price strong { font-size: 1rem; color: var(--text); }
     .td-ppkg strong { font-size: 1rem; color: var(--accent); }
