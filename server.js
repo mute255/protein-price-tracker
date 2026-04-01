@@ -421,12 +421,12 @@ function renderHTML(data) {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Google tag (gtag.js) -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-C5XN69VL5H"></script>
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-510ZBPM3W4"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
     function gtag(){dataLayer.push(arguments);}
     gtag('js', new Date());
-    gtag('config', 'G-C5XN69VL5H');
+    gtag('config', 'G-510ZBPM3W4');
   </script>
   <title>【毎日更新】プロテイン最安値ランキング｜コスパで徹底比較【${new Date().getFullYear()}年最新】</title>
   <meta name="description" content="プロテインの最安値をkg単価・1食単価でリアルタイム比較。Amazonの${successCount}商品を毎日自動更新。現在の最安値は${cheapestPpkg}/kg（${updatedStr}時点）。ホエイプロテインのコスパ最強商品がすぐわかる。">
